@@ -22,6 +22,11 @@ app.get("/hello", (req, res) => {        // response can contain HTML code, whic
   res.send("<html><body>Hello <b>World</b></body></html>\n");   
 });
 
+app.get("/urls", (req, res) => {
+  const templateVars = { urls: urlDatabase };
+  res.render("urls_index", templateVars);
+});
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
