@@ -3,6 +3,8 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 
+app.use(express.urlencoded({ extended: true }));  //  To make data readable, use another piece of middleware which will translate, or parse the body.
+
 app.set("view engine", "ejs")       //This tells the Express app to use EJS as its templating engine.
 
 const urlDatabase = {
@@ -33,7 +35,7 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
 
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] /* What goes here? */ };
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
 
   res.render("urls_show", templateVars);
 });
