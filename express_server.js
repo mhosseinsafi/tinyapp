@@ -28,7 +28,7 @@ app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
-
+// Create
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
@@ -40,10 +40,27 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
+  app.post("/urls", (req, res) => {
+    const longURL = req.body.longURL;
+    const id = generateRandomString();
+    urlDatabase[id] = longURL;
+    res.redirect(`/urls/${id}`);   //redirect the user to a new page
+  });
+
+  app.get("/u/:id", (req, res) => {
+    const id = req.params.id;
+    const longURL = urlDatabase[id];
+    if (longURL) {
+      res.redirect(longURL);
+    } else {
+      res.status(404).send("URL not found");
+    }
+    console.log(req.body); // Log the POST request body to the console
   res.send("Ok"); // Respond with 'Ok' (we will replace this)
-});
+  });
+
+  
+
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
