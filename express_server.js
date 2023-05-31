@@ -69,6 +69,17 @@ app.get("/urls/:id", (req, res) => {
     }
   });
 
+  app.post("/urls/:id", (req, res) => {
+    const id = req.params.id;
+    const newURL = req.body.newURL;
+    if (newURL) {
+      urlDatabase[id] = newURL;
+      res.redirect("/urls");
+    } else {
+      res.status(400).send("Invalid URL");
+    }
+  });
+
   
 
 
