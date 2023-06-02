@@ -23,7 +23,12 @@
     <form method="POST" action="/login" class="form-inline">
       <input type="text" name="username" placeholder="Username">
       <button type="submit" class="nav-item nav-link">Login</button>
-    </form> <% } else { %> 
-      <span> Logged in as:<%= username %></span><% } %> 
+    </form> 
+    <% } else { %> 
+      <form method="POST" action="/logout" class="form-inline">
+        <span>Logged in as: <%= username %></span>
+        <button type="submit" class="nav-item nav-link">Log Out</button>
+      </form>
+      <% } %> 
   </nav>
 </header>
