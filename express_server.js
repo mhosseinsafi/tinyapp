@@ -32,13 +32,13 @@ app.get("/hello", (req, res) => {        // response can contain HTML code, whic
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { urls: urlDatabase, username: req.cookies["username"] };
   res.render("urls_index", templateVars);
 });
 
 // Create
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  res.render("urls_new", {username: req.cookies["username"]});
 });
 
 app.get("/urls/:id", (req, res) => {
