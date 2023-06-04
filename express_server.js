@@ -19,6 +19,21 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+//user database
+
+const users = {
+  aaa: {
+    id: "aaa",
+    email: "h@h.com",      
+    password: "hhh",
+  },
+  bbb: {
+    id: "bbb",
+    email: "n@n.com",
+    password: "nnn",
+  },
+};
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -99,7 +114,7 @@ app.get("/urls/:id", (req, res) => {
   //Add an endpoint to handle a POST to /login in your Express server.
 
   app.post('/login', (req, res) => {
-    const username = req.body.username;
+    const username = req.body.username;    // grab the info from the body
     res.cookie('username', username);
     res.redirect('/urls');
   });
@@ -110,8 +125,55 @@ app.get("/urls/:id", (req, res) => {
   });
 
   app.get('/register', (req, res) => {
+    const email = req.body.email;          // grab the info from the body
+    const password = req.body.password; 
     res.render('register');
   });
+
+  app.post('/register', (req, res) => {
+    const email = req.body.email;          // grab the info from the body
+    const password = req.body.password; 
+
+    // we did not get the email or password
+    let foundUser = null;
+
+    for (const userId in users) {
+      const user = users[userId];
+      if(user.email === email) {
+        // we found our user
+        foundUser = user;
+      }
+    }
+    //did we not find the user
+    if(!foundUser) {
+      res.status(400).send('No user with that email address found');
+    }
+
+  if (!email || !password) {
+    return res.status(400).send('Please provide an Email address and a password');
+  }
+  // look up the user from our database
+   // Generate a random user ID
+   const userId = generateRandomString();
+
+   // Create a new user object
+   const newUser = {
+     id: userId,
+     email,
+     password,
+   };
+ 
+   // Add the new user to the users object
+   users[userId] = newUser;
+
+   // user_id cookie containing the user's newly generated ID
+   res.cookie('user_id', userId);
+ 
+   // Redirect the user to the /urls page 
+   res.redirect('/urls');
+  });
+
+  
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
