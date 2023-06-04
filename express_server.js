@@ -105,9 +105,12 @@ app.get("/urls/:id", (req, res) => {
   });
 
   app.post('/logout', (req, res) => {
-    //const username = req.body.username;
     res.clearCookie('username');
     res.redirect('/urls');
+  });
+
+  app.get('/register', (req, res) => {
+    res.render('register');
   });
 
 app.listen(PORT, () => {
