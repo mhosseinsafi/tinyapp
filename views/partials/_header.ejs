@@ -17,17 +17,14 @@
       <div class="navbar-nav">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
-        <a class="nav-item nav-link" href="/register">Register</a>
       </div>
     </div>
-    <% if (!username) { %>
-    <form method="POST" action="/login" class="form-inline">
-      <input type="text" name="username" placeholder="Username">
-      <button type="submit" class="nav-item nav-link">Login</button>
-    </form> 
+    <% if (!user) { %>
+      <a class="nav-item nav-link" href="/register">Register</a>
+      <a class="nav-item nav-link" href="/login">Login</a>
     <% } else { %> 
       <form method="POST" action="/logout" class="form-inline">
-        <span>Logged in as: <%= username %></span>
+        <span>Logged in as: <%= user.email %></span>
         <button type="submit" class="nav-item nav-link">Log Out</button>
       </form>
       <% } %> 
