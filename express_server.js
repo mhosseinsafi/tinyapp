@@ -2,6 +2,7 @@
 const express = require("express");
 const cookieParser = require('cookie-parser');
 const { generateRandomString } = require("./helpers");
+const bcrypt = require("bcryptjs");
 
 // constant
 const app = express();
@@ -124,7 +125,7 @@ app.get("/urls/:id", (req, res) => {
     res.clearCookie('user_id');
     res.redirect('/login');
   });
-
+// Display of the register form
   app.get('/register', (req, res) => { 
     if (req.cookies.user_id) {
       res.redirect('/urls');        // If the user is logged in,redirect urls
@@ -132,7 +133,7 @@ app.get("/urls/:id", (req, res) => {
       res.render('register');
     }
   });
-
+//submission of the register form
   app.post('/register', (req, res) => {
     const email = req.body.email;          // grab the info from the body
     const password = req.body.password; 
@@ -160,15 +161,17 @@ app.get("/urls/:id", (req, res) => {
   if (!email || !password) {
     return res.status(400).send('Please provide an Email address and a password');
   }
-  // look up the user from our database
+
    // Generate a random user ID
    const userId = generateRandomString();
+
+   const hashedPassword = bcrypt.hashSync(password, 10);
 
    // Create a new user object
    const newUser = {
      id: userId,
      email,
-     password,
+     password: hashedPassword,
    };
  
    // Add the new user to the users object
@@ -179,20 +182,23 @@ app.get("/urls/:id", (req, res) => {
    res.redirect('/urls');
   });
 
-
+// Display of the login form
    app.get('/login', (req, res) => {
     if (req.cookies.user_id) {                
-      res.redirect('/urls');             //If the user is logged in,redirect urls
+      res.redirect('/urls');            
     } else {
       res.render('login');
     }
   });
 
+  //Submisiion of the login form
   app.post('/login', (req, res) => {
     const email = req.body.email;          // grab the info from the body
     const password = req.body.password; 
 
-
+    if (!email || !password) {
+      return res.status(403).send('Please provide an Email address and a password');
+    }
 
     // we did not get the email or password
     let foundUser = null;
@@ -205,18 +211,14 @@ app.get("/urls/:id", (req, res) => {
       }
     }
 
-    if (!email || !password) {
-      return res.status(403).send('Please provide an Email address and a password');
-    }
-
     //did we not find the user
     if(!foundUser) {
       return res.status(403).send('No user with that email address found');
     }
 
-  
+    const passwordIsCorrect = bcrypt.compareSync(password, foundUser.password);
 
-  if (!foundUser || foundUser.password !== password) {
+  if (!passwordIsCorrect) {
     return res.status(403).send("Email or Password is incorrect")
     }
 
@@ -227,7 +229,7 @@ app.get("/urls/:id", (req, res) => {
    const newUser = {
      id: userId,
      email,
-     password,
+     password: foundUser.password, // Store the hashed password ,
    };
  
    // Add the new user to the users object
