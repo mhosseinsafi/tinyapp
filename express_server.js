@@ -4,7 +4,7 @@ const cookieParser = require('cookie-parser');
 
 // constant
 const app = express();
-const PORT = 8080; // default port 8080
+const PORT = 8080; 
 
 //middleware
 app.use(express.urlencoded({ extended: true }));  //  To make data readable, use another piece of middleware which will translate, or parse the body.
@@ -53,7 +53,11 @@ app.get("/urls", (req, res) => {
 
 // Create
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new", {user: users[req.cookies.user_id]});
+  if (req.cookies.user_id) {
+    res.render("urls_new", { user: users[req.cookies.user_id] });  //If the user is not logged in, redirect /login
+  } else {
+    res.redirect("/login");
+  }
 });
 
 app.get("/urls/:id", (req, res) => {
@@ -64,10 +68,14 @@ app.get("/urls/:id", (req, res) => {
 });
 
   app.post("/urls", (req, res) => {
+     if (req.cookies.user_id) {
     const longURL = req.body.longURL;
     const id = generateRandomString();
     urlDatabase[id] = longURL;
-    res.redirect(`/urls/${id}`);   //redirect the user to a new page
+    res.redirect(`/urls/${id}`);             //redirect the user to a new page
+  } else {
+    res.status(401).send("<html><body>You must be logged in.</body></html>");
+  }   
   });
 
   app.get("/u/:id", (req, res) => {
@@ -76,7 +84,7 @@ app.get("/urls/:id", (req, res) => {
     if (longURL) {
       res.redirect(longURL);
     } else {
-      res.status(404).send("URL not found");
+      res.status(404).send("<html><body>URL not found.</body></html>");
     }
     console.log(req.body); // Log the POST request body to the console
   res.send("Ok"); // Respond with 'Ok' (we will replace this)
@@ -116,10 +124,12 @@ app.get("/urls/:id", (req, res) => {
     res.redirect('/login');
   });
 
-  app.get('/register', (req, res) => {
-    const email = req.body.email;          // grab the info from the body
-    const password = req.body.password; 
-    res.render('register');
+  app.get('/register', (req, res) => { 
+    if (req.cookies.user_id) {
+      res.redirect('/urls');        // If the user is logged in,redirect urls
+    } else {
+      res.render('register');
+    }
   });
 
   app.post('/register', (req, res) => {
@@ -170,7 +180,11 @@ app.get("/urls/:id", (req, res) => {
 
 
    app.get('/login', (req, res) => {
-    res.render('login');
+    if (req.cookies.user_id) {                
+      res.redirect('/urls');             //If the user is logged in,redirect urls
+    } else {
+      res.render('login');
+    }
   });
 
   app.post('/login', (req, res) => {
@@ -189,20 +203,22 @@ app.get("/urls/:id", (req, res) => {
         foundUser = user;
       }
     }
+
+    if (!email || !password) {
+      return res.status(403).send('Please provide an Email address and a password');
+    }
+
     //did we not find the user
     if(!foundUser) {
-      res.status(403).send('No user with that email address found');
+      return res.status(403).send('No user with that email address found');
     }
 
-  if (!email || !password) {
-    return res.status(403).send('Please provide an Email address and a password');
-  }
+  
 
   if (!foundUser || foundUser.password !== password) {
-    res.status(403).send("Email or Password is incorrect")
-    return;
+    return res.status(403).send("Email or Password is incorrect")
     }
-  // look up the user from our database
+
    // Generate a random user ID
    const userId = generateRandomString();
 
