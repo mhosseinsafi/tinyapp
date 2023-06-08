@@ -6,6 +6,7 @@ const bcrypt = require("bcryptjs");
 
 
 
+
 // constant
 const app = express();
 const PORT = 8080; 
@@ -47,16 +48,14 @@ const users = {
   },
 };
 
+// if the session has user id redirect /urls otherwise redirect /login
 app.get("/", (req, res) => {
+  if (userIsLoggedIn) {
+    res.redirect("/urls");
+  } else {
+    res.redirect("/login");
+  }
   res.send("Hello!");
-});
-
-app.get("/urls.json", (req, res) => {     // JSON string representing the entire urlDatabase object
-  res.json(urlDatabase);
-});
-
-app.get("/hello", (req, res) => {        // response can contain HTML code, which would be rendered in the client browser.
-  res.send("<html><body>Hello <b>World</b></body></html>\n");   
 });
 
 app.get("/urls", (req, res) => {
@@ -78,7 +77,7 @@ app.get("/urls/new", (req, res) => {
     res.redirect("/login");
   }
 });
-
+// click on short url redirect to longURL
 app.get("/urls/:id", (req, res) => {         
 
  const id = req.params.id;
@@ -195,7 +194,7 @@ app.get("/urls/:id", (req, res) => {
   });
 
   app.post('/logout', (req, res) => {
-    req.session.user_id = null;
+    req.session = null;
     res.redirect('/login');
   });
 // Display of the register form
