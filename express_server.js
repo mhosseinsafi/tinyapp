@@ -1,7 +1,7 @@
 
 const express = require("express");
-const cookieParser = require('cookie-parser');
-const { generateRandomString,urlsForUser } = require("./helpers");
+const cookieSession = require('cookie-session')
+const { generateRandomString,urlsForUser,getUserByEmail } = require("./helpers");
 const bcrypt = require("bcryptjs");
 
 
@@ -12,8 +12,11 @@ const PORT = 8080;
 
 //middleware
 app.use(express.urlencoded({ extended: true }));  //  To make data readable, use another piece of middleware which will translate, or parse the body.
-app.use(cookieParser())   // creat and populate req.body
-
+app.use(cookieSession({
+  name: 'session',
+  keys: ['secret-key'], // array of secret keys for encryption
+  maxAge: 12 * 50 * 50 * 1000 // age of the session (12 hours ...)
+}));
 //configuration
 
 app.set("view engine", "ejs")       //This tells the Express app to use EJS as its templating engine.
@@ -57,7 +60,7 @@ app.get("/hello", (req, res) => {        // response can contain HTML code, whic
 });
 
 app.get("/urls", (req, res) => {
-const userId = req.cookies.user_id;
+const userId = req.session.user_id;
 if (!userId) {
   res.redirect("/login");
 } else {
@@ -69,8 +72,8 @@ if (!userId) {
 
 // Create
 app.get("/urls/new", (req, res) => {
-  if (req.cookies.user_id) {
-    res.render("urls_new", { user: users[req.cookies.user_id] });  //If the user is not logged in, redirect /login
+  if (req.session.user_id) {
+    res.render("urls_new", { user: users[req.session.user_id] });  //If the user is not logged in, redirect /login
   } else {
     res.redirect("/login");
   }
@@ -78,15 +81,13 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {         
 
- // const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id],  user: users[req.cookies.user_id], };
- // res.render("urls_show", templateVars);
  const id = req.params.id;
  const urlEntry = urlDatabase[id];
  if (urlEntry) {
    const templateVars = {
      id: id,
      longURL: urlEntry.longURL,
-     user: users[req.cookies.user_id],
+     user: users[req.session.user_id],
    };
    res.render("urls_show", templateVars);
  } else {
@@ -95,10 +96,10 @@ app.get("/urls/:id", (req, res) => {
 });
 
   app.post("/urls", (req, res) => {
-     if (req.cookies.user_id) {
+     if (req.session.user_id) {
     const longURL = req.body.longURL;
     const id = generateRandomString();
-    urlDatabase[id] = { longURL: longURL, userID: req.cookies.user_id, };
+    urlDatabase[id] = { longURL: longURL, userID: req.session.user_id, };
     res.redirect(`/urls/${id}`);             //redirect the user to a new page
   } else {
     res.status(401).send("<html><body>You must be logged in.</body></html>");
@@ -125,12 +126,12 @@ app.get("/urls/:id", (req, res) => {
       return res.status(404).send("URL not found");
     }
   
-    if (!req.cookies.user_id) {
+    if (!req.session.user_id) {
       // User is not logged in
       return res.status(401).send("<html><body>You must be logged in.</body></html>");
     }
   
-    if (urlEntry.userID !== req.cookies.user_id) {
+    if (urlEntry.userID !== req.session.user_id) {
       // User does not own the URL
       return res.status(403).send("<html><body>You do not have permission to delete this URL.</body></html>");
     }
@@ -141,20 +142,16 @@ app.get("/urls/:id", (req, res) => {
 
  // Edit
   app.post("/urls/:id/edit", (req, res) => {
-    // const shortURL = req.params.id;
-    // const EditURL = req.body.EditURL
-    // urlDatabase[shortURL] = EditURL;
-    // res.redirect("/urls");
     const id = req.params.id;
   const urlEntry = urlDatabase[id];
 
-  if (!req.cookies.user_id) {
+  if (!req.session.user_id) {
     // User is not logged in
     res.status(401).send("<html><body>You must be logged in.</body></html>");
   } else if (!urlEntry) {
     // URL entry not found
     res.status(404).send("URL not found");
-  } else if (urlEntry.userID !== req.cookies.user_id) {
+  } else if (urlEntry.userID !== req.session.user_id) {
     // User is not the owner of the URL
     res.status(403).send("<html><body>You do not have permission to edit this URL.</body></html>");
   } else {
@@ -170,14 +167,7 @@ app.get("/urls/:id", (req, res) => {
 });
 
   app.post("/urls/:id", (req, res) => {
-    // const id = req.params.id;
-    // const newURL = req.body.newURL;
-    // if (newURL) {
-    //   urlDatabase[id] = newURL;
-    //   res.redirect("/urls");
-    // } else {
-    //   res.status(400).send("Invalid URL");
-    // }
+   
     const id = req.params.id;
     const newURL = req.body.newURL;
   
@@ -186,12 +176,12 @@ app.get("/urls/:id", (req, res) => {
       return res.status(404).send("URL not found");
     }
   
-    if (!req.cookies.user_id) {
+    if (!req.session.user_id) {
       // User is not logged in
       return res.status(401).send("<html><body>You must be logged in.</body></html>");
     }
   
-    if (urlDatabase[id].userID !== req.cookies.user_id) {
+    if (urlDatabase[id].userID !== req.session.user_id) {
       // User does not own the URL
       return res.status(403).send("<html><body>You do not have permission to edit this URL.</body></html>");
     }
@@ -205,13 +195,12 @@ app.get("/urls/:id", (req, res) => {
   });
 
   app.post('/logout', (req, res) => {
-    res.clearCookie('user_id');
-    //req.cookies = null;
+    req.session.user_id = null;
     res.redirect('/login');
   });
 // Display of the register form
   app.get('/register', (req, res) => { 
-    if (req.cookies.user_id) {
+    if (req.session.user_id) {
       res.redirect('/urls');        // If the user is logged in,redirect urls
     } else {
       res.render('register');
@@ -226,30 +215,13 @@ app.get("/urls/:id", (req, res) => {
       return res.status(400).send('Dude where is your email Or Password?!');
     }
 
-    // we did not get the email or password
-    let foundUser = null;
-
-    for (const userId in users) {
-      const user = users[userId];
-      if(user.email === email) {
-        // we found our user
-        foundUser = user;
-        break;
-      }
-    }
-    //did we not find the user
-    if(foundUser) {
-      return res.status(400).send('The email address already exists');
-    }
-
-  if (!email || !password) {
-    return res.status(400).send('Please provide an Email address and a password');
+    const existingUser = getUserByEmail(email, users);
+    if (existingUser) {
+    return res.status(400).send('The email address already exists');
   }
 
-   // Generate a random user ID
-   const userId = generateRandomString();
-
-   const hashedPassword = bcrypt.hashSync(password, 10);
+  const userId = generateRandomString();
+  const hashedPassword = bcrypt.hashSync(password, 10);
 
    // Create a new user object
    const newUser = {
@@ -262,13 +234,13 @@ app.get("/urls/:id", (req, res) => {
    users[userId] = newUser;
 
    // user_id cookie containing the user's newly generated ID
-   res.cookie('user_id', userId);
+   req.session.user_id = userId;
    res.redirect('/urls');
   });
 
 // Display of the login form
    app.get('/login', (req, res) => {
-    if (req.cookies.user_id) {                
+    if (req.session.user_id) {                
       res.redirect('/urls');            
     } else {
       res.render('login');
@@ -284,29 +256,17 @@ app.get("/urls/:id", (req, res) => {
       return res.status(403).send('Please provide an Email address and a password');
     }
 
-    // we did not get the email or password
-    let foundUser = null;
+    const user = getUserByEmail(email, users);
+    if (!user) {
+    return res.status(403).send('No user with that email address found');
+  }
 
-    for (const userId in users) {
-      const user = users[userId];
-      if(user.email === email) {
-        // we found our user
-        foundUser = user;
-      }
-    }
+   const passwordIsCorrect = bcrypt.compareSync(password, user.password);
 
-    //did we not find the user
-    if(!foundUser) {
-      return res.status(403).send('No user with that email address found');
-    }
-
-    const passwordIsCorrect = bcrypt.compareSync(password, foundUser.password);
-
-  if (!passwordIsCorrect) {
-    return res.status(403).send("Email or Password is incorrect")
-    }
-   // user_id cookie containing the user's newly generated ID
-   res.cookie('user_id', foundUser.id);
+    if (!passwordIsCorrect) {
+    return res.status(403).send("Email or password is incorrect");
+  }
+   req.session.user_id = user.id;
  
    res.redirect('/urls');
   });  
