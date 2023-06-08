@@ -40,10 +40,10 @@ const users = {
     email: "h@h.com",      
     password:  bcrypt.hashSync('hhh', 10),
   },
-  bbb: {
-    id: "bbb",
+  aJ48lW: {
+    id: "aJ48lW",
     email: "n@n.com",
-    password: "nnn",
+    password: bcrypt.hashSync('nnn', 10),
   },
 };
 
