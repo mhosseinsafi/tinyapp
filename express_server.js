@@ -203,7 +203,9 @@ app.get("/urls/:id", (req, res) => {
     if (req.session.user_id) {
       res.redirect('/urls');        // If the user is logged in,redirect urls
     } else {
-      res.render('register');
+      const user = null; // user not defined
+
+    res.render('register', { user });
     }
   });
 //submission of the register form
@@ -243,7 +245,8 @@ app.get("/urls/:id", (req, res) => {
     if (req.session.user_id) {                
       res.redirect('/urls');            
     } else {
-      res.render('login');
+      const user = null; // user not defined
+    res.render('login', { user });
     }
   });
 
