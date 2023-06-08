@@ -50,12 +50,11 @@ const users = {
 
 // if the session has user id redirect /urls otherwise redirect /login
 app.get("/", (req, res) => {
-  if (userIsLoggedIn) {
+  if (req.session.user_id) {
     res.redirect("/urls");
   } else {
     res.redirect("/login");
   }
-  res.send("Hello!");
 });
 
 app.get("/urls", (req, res) => {
