@@ -10,4 +10,17 @@ function generateRandomString(){
     return random_string;
 }
 
-module.exports = { generateRandomString,};
+function urlsForUser(id,urlDatabase) {
+  const userUrls = {};
+  for (const shortURL in urlDatabase) {
+    const urlEntry = urlDatabase[shortURL];
+    if (urlEntry.userID === id) {
+      userUrls[shortURL] = urlEntry;
+    }
+  }
+  return userUrls;
+}
+
+module.exports = { generateRandomString,urlsForUser,};
+
+
